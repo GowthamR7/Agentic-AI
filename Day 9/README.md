@@ -37,8 +37,8 @@ Follow these steps to get the project running locally.
 ### 1. Clone the Repository
 
 ```bash
-git 
-cd <your-repo-name>
+git clone https://github.com/GowthamR7/Agentic-AI.git
+cd Day 9
 ```
 ### 2. Create and activate environment
 ```bash
