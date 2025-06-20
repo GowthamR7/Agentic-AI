@@ -1,0 +1,7 @@
+student_id,major,company_applied,role_applied,status,rejection_reason,mock_interview_score
+S001,ECE,TCS,Software Engineer,Rejected,"Weak Coding Skills",65
+S002,CSE,Google,SDE,Accepted,,92
+S003,ECE,Wipro,Systems Engineer,Rejected,"Poor Communication",71
+S004,IT,Accenture,Consultant,Rejected,"Poor Communication",75
+S005,CSE,Zoho,Product Engineer,Accepted,,88
+S006,ECE,Infosys,Associate,Rejected,"Weak Coding Skills",68

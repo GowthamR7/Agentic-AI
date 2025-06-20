@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Placement Insight Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #111827; color: #d1d5db; }
+        .card { background-color: #1f2937; border-radius: 0.75rem; padding: 1.5rem; border: 1px solid #374151; }
+        .btn-primary { background-color: #4f46e5; color: white; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 0.5rem; transition: background-color 0.2s; }
+        .btn-primary:hover:not(:disabled) { background-color: #4338ca; }
+        .btn-primary:disabled { background-color: #374151; cursor: not-allowed; }
+        .file-input { background-color: #374151; border-radius: 0.5rem; }
+        .tab-btn { background-color: #374151; padding: 0.5rem 1rem; border-radius: 0.5rem; margin-right: 0.5rem; }
+        .tab-btn.active { background-color: #4f46e5; }
+        .prose h3 { color: white; font-weight: 600; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="p-4 sm:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">🎓 AI-Driven Placement Insight Generator</h1>
+            <p class="mt-2 text-lg text-gray-400">This system uses a 6-Agent Crew to autonomously analyze placement data and generate reports.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Input Section -->
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white mb-4">1. Upload Data Files</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block mb-1 font-medium text-sm">Student OKRs (.csv)</label>
+                        <input type="file" id="okr_file" class="file-input block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium text-sm">Job Applications (.csv)</label>
+                        <input type="file" id="app_file" class="file-input block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium text-sm">Rejections (.csv)</label>
+                        <input type="file" id="rej_file" class="file-input block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+                    </div>
+                    <div>
+                        <label class="block mb-1 font-medium text-sm">Mock Interviews (.csv)</label>
+                        <input type="file" id="mock_file" class="file-input block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+                    </div>
+                </div>
+                <button id="generateBtn" class="btn-primary w-full mt-6">🚀 Generate Placement Insights</button>
+            </div>
+
+            <!-- Output Section -->
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-white mb-4">2. Analysis & Reports</h2>
+                <div id="logContainer" class="mb-6 hidden">
+                    <h3 class="font-semibold text-lg mb-2">Agent Workflow Log</h3>
+                    <div id="logContent" class="p-3 bg-gray-900 rounded-md text-sm font-mono whitespace-pre-wrap h-40 overflow-y-auto"></div>
+                </div>
+                
+                <div id="resultsContainer" class="hidden">
+                     <div class="mb-4">
+                        <button id="tabInsights" class="tab-btn active">📊 Insights & Recs</button>
+                        <button id="tabReport" class="tab-btn">📄 Final Report</button>
+                        <button id="tabNotifications" class="tab-btn">🔔 Notifications</button>
+                    </div>
+                    <div id="resultsContent" class="prose prose-invert max-w-none"></div>
+                </div>
+
+                 <div id="initialMessage">
+                    <p class="text-center text-gray-400 py-10">Your analysis results will appear here after you upload files and click generate.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const logContainer = document.getElementById('logContainer');
+        const logContent = document.getElementById('logContent');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsContent = document.getElementById('resultsContent');
+        const initialMessage = document.getElementById('initialMessage');
+
+        const tabInsights = document.getElementById('tabInsights');
+        const tabReport = document.getElementById('tabReport');
+        const tabNotifications = document.getElementById('tabNotifications');
+
+        let finalState = {};
+
+        const readFileAsText = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        };
+
+        generateBtn.addEventListener('click', async () => {
+            const files = [
+                { name: "OKRS", file: document.getElementById('okr_file').files[0] },
+                { name: "APPLICATIONS", file: document.getElementById('app_file').files[0] },
+                { name: "REJECTIONS", file: document.getElementById('rej_file').files[0] },
+                { name: "MOCK INTERVIEWS", file: document.getElementById('mock_file').files[0] }
+            ];
+
+            let allText = "";
+            let fileCount = 0;
+            
+            for (const item of files) {
+                if(item.file) {
+                    allText += `--- ${item.name} DATA ---\n${await readFileAsText(item.file)}\n\n`;
+                    fileCount++;
+                }
+            }
+
+            if (fileCount === 0) {
+                alert("Please upload at least one data file.");
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="animate-pulse">The AI Agent team is working...</span>';
+            initialMessage.style.display = 'none';
+            logContainer.classList.remove('hidden');
+            logContent.textContent = '▶️ Workflow initiated...';
+            resultsContainer.classList.add('hidden');
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ raw_data_text: allText })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                finalState = await response.json();
+                
+                logContent.textContent = (finalState.workflow_log || []).join('\n');
+                resultsContainer.classList.remove('hidden');
+                displayTabContent('insights'); 
+                
+            } catch (error) {
+                resultsContent.innerHTML = `<p class="text-red-400">An error occurred: ${error.message}</p>`;
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🚀 Generate Placement Insights';
+            }
+        });
+
+        const displayTabContent = (tabName) => {
+             [tabInsights, tabReport, tabNotifications].forEach(btn => btn.classList.remove('active'));
+             document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+
+            let content = "";
+            if (tabName === 'insights') {
+                content = `<h3>Key Placement Insights</h3>${marked.parse(finalState.insights || '')}`
+                        + `<h3>Trend Comparison</h3>${marked.parse(finalState.trend_comparison || '')}`
+                        + `<h3>Action Recommendations</h3>${marked.parse(finalState.recommendations || '')}`;
+            } else if (tabName === 'report') {
+                content = marked.parse(finalState.report || 'No report generated.');
+            } else if (tabName === 'notifications') {
+                content = marked.parse(finalState.notifications || 'No notifications generated.');
+            }
+            resultsContent.innerHTML = content;
+        }
+        
+        tabInsights.addEventListener('click', () => displayTabContent('insights'));
+        tabReport.addEventListener('click', () => displayTabContent('report'));
+        tabNotifications.addEventListener('click', () => displayTabContent('notifications'));
+    </script>
+</body>
+</html>

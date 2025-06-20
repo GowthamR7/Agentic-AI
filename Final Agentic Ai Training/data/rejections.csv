@@ -1,0 +1,5 @@
+student_id,company,rejection_reason
+S001,TCS,"Weak performance in the technical coding round"
+S003,Wipro,"Lacked confidence and clear communication during the HR interview"
+S004,Accenture,"Case study presentation was not structured well"
+S006,Infosys,"Could not solve the SQL query problem in the technical assessment"
