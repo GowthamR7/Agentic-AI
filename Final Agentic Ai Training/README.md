@@ -15,6 +15,7 @@ The entire workflow is orchestrated using LangGraph, ensuring a robust and trans
 🤖 Agentic Workflow Diagram
 The system operates based on a clear, sequential flow of information between six specialist agents. The diagram below illustrates this agentic flow.
 
+```bash
 [Input: 4 CSV data files]
            |
            ▼
@@ -55,6 +56,8 @@ The system operates based on a clear, sequential flow of information between six
            |
            ▼
 [Output: Final Report & Notifications]
+
+```
 
 ✨ Project Showcase
 Here are some screenshots of the final application in action, demonstrating the user interface and the detailed, multi-tabbed output.
